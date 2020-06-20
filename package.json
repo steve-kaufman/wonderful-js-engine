@@ -2,7 +2,8 @@
   "name": "wonderful-engine",
   "version": "0.0.2",
   "description": "A Javascript Game Engine",
-  "main": "index.html",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
     "build": "tsc",
     "prepare": "npm run build"
