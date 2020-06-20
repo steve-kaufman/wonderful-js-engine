@@ -1,9 +1,4 @@
-import player from './demo/Player'
-import object from './demo/Object'
-import { Game } from './game/Game'
-import { Canvas } from './game/Canvas'
+import * as Behaviors from './behaviors'
+import * as Game from './game'
 
-const game = new Game(new Canvas())
-
-game.addGameObject(player)
-game.addGameObject(object)
+export { Behaviors, Game }

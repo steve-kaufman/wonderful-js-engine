@@ -1,7 +1,6 @@
 import player from './Player'
 import object from './Object'
-import { Game } from '../game/Game'
-import { Canvas } from '../game/Canvas'
+import { Canvas, Game } from '../src/game'
 
 const game = new Game(new Canvas())
 

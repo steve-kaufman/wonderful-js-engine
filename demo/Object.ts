@@ -1,6 +1,5 @@
-import { GameObject } from '../game/GameObject'
-import { BoxCollider } from '../behaviors/BoxCollider'
-import { Behavior, Canvas } from '../game'
+import { BoxCollider } from '../src/behaviors'
+import { Behavior, Canvas, GameObject } from '../src/game'
 
 const object = new GameObject('object')
 

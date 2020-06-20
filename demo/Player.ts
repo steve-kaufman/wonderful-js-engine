@@ -1,5 +1,5 @@
-import { Behavior, Collision, GameObject } from '../game'
-import { BoxCollider, DynamicBody, BoxOutline } from '../behaviors'
+import { Behavior, Collision, GameObject } from '../src/game'
+import { BoxCollider, DynamicBody, BoxOutline } from '../src/behaviors'
 import { ObjectBehavior } from './Object'
 
 const player = new GameObject('player')
