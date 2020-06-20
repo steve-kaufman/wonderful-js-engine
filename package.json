@@ -8,11 +8,11 @@
   },
   "dependencies": {
     "@types/uuid": "^8.0.0",
-    "jest": "26.0.1",
     "uuid": "8.1.0"
   },
   "devDependencies": {
     "@babel/core": "7.2.0",
+    "jest": "26.0.1",
     "typescript": "3.9.5"
   },
   "keywords": [
