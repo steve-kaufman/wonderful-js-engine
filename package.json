@@ -1,10 +1,11 @@
 {
-  "name": "wonderful-js-engine",
+  "name": "wonderful-engine",
   "version": "0.0.1",
   "description": "A Javascript Game Engine",
   "main": "index.html",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "prepare": "npm run build"
   },
   "dependencies": {
     "@types/uuid": "^8.0.0",
