@@ -77,6 +77,7 @@ export class Game {
   addGameObject(gameObject: GameObject) {
     this.gameObjects.set(gameObject.id, gameObject)
     gameObject.game = this
+    gameObject.onAdd()
   }
   // Unsubscribes a GameObject to the update and render loops
   removeGameObject(gameObject: GameObject) {

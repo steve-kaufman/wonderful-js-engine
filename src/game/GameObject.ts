@@ -33,6 +33,8 @@ export class GameObject {
     Behavior & { onCollisionExit(collision: Collision): void }
   > = new Map()
 
+  private onAdders: Map<string, Behavior & { onAdd(): void }> = new Map()
+
   // Member behaviors
   public transform: Transform
   public boxOutline?: BoxOutline
@@ -76,6 +78,12 @@ export class GameObject {
   onCollisionExit(collision: Collision) {
     this.collisionExitHandlers.forEach(behavior => {
       behavior.onCollisionExit(collision)
+    })
+  }
+
+  onAdd() {
+    this.onAdders.forEach(behavior => {
+      behavior.onAdd()
     })
   }
 
@@ -127,14 +135,18 @@ export class GameObject {
         } & T
       )
     }
+    if (behavior.onAdd) {
+      this.onAdders.set(
+        behavior.id,
+        behavior as Behavior & {
+          onAdd(collision: Collision): void
+        } & T
+      )
+    }
 
     this.behaviors.set(behavior.id, behavior)
 
     behavior.setParent(this)
-
-    if (behavior.onAdd) {
-      behavior.onAdd()
-    }
 
     return behavior as T
   }
