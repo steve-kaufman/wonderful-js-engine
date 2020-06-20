@@ -1,4 +1,4 @@
-import { Behavior, CollisionSide, GameObject, Vector } from '../game'
+import { Behavior, CollisionSide, GameObject, Vector } from '..'
 import { Corner, Transform } from '.'
 
 export class BoxCollider extends Behavior {
@@ -36,6 +36,8 @@ export class BoxCollider extends Behavior {
     game.getGameObjects().forEach((gameObject: GameObject) => {
       if (gameObject === this.parent) return
 
+      if (gameObject.boxCollider === undefined) return
+
       const isColliding = Transform.DetectCollision(
         this.parent.transform.getSides(),
         gameObject.transform.getSides()
@@ -57,7 +59,9 @@ export class BoxCollider extends Behavior {
       let side: CollisionSide
 
       if (!this.isCollidingWith(gameObject.id)) {
-        side = this.getCollisionSide(gameObject)
+        side = this.getCollisionSide(
+          gameObject as GameObject & { boxCollider: BoxCollider }
+        )
         this.parent.onCollisionEnter({ side, gameObject })
         this.collisions.set(gameObject.id, gameObject)
       }
@@ -83,7 +87,9 @@ export class BoxCollider extends Behavior {
     this.collisions.delete(gameObjectId)
   }
 
-  private getCollisionSide(other: GameObject): CollisionSide {
+  private getCollisionSide(
+    other: GameObject & { boxCollider: BoxCollider }
+  ): CollisionSide {
     // Get velocity of parent GameObject
     const parentVelocity = new Vector(
       this.parent.transform.x - this.lastPos.x,

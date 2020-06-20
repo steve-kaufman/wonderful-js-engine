@@ -7,7 +7,7 @@ export class Game {
   private gameObjects: Map<string, GameObject>
 
   // This value controls whether the game is updating/rendering
-  private isRunning: boolean
+  private isRunning: boolean = false
 
   private lastTime: number
 
@@ -20,6 +20,7 @@ export class Game {
     this.updateRate = 30
     this.gameObjects = new Map()
     this.input = new Input()
+    this.lastTime = Date.now()
     this.start()
   }
 
@@ -88,7 +89,7 @@ export class Game {
       return false
     }
 
-    return this.gameObjects.get(id)
+    return this.gameObjects.get(id) as GameObject
   }
 
   getGameObjects(): Map<string, GameObject> {

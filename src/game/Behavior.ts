@@ -4,7 +4,7 @@ import { Canvas } from './Canvas'
 import { Collision } from './Collision'
 
 export abstract class Behavior {
-  protected parent: GameObject
+  protected parent!: GameObject
 
   readonly id: string
 

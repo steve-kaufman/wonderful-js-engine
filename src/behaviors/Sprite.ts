@@ -1,5 +1,4 @@
-import { Behavior } from '../game/Behavior'
-import { Canvas } from '../game/Canvas'
+import { Canvas, Behavior } from '..'
 
 export class Sprite extends Behavior {
   image: HTMLCanvasElement
@@ -9,7 +8,7 @@ export class Sprite extends Behavior {
 
     // Create canvas image for sprite
     this.image = document.createElement('canvas')
-    const ctx = this.image.getContext('2d')
+    const ctx = this.image.getContext('2d') as CanvasRenderingContext2D
 
     // Create HTML Image Element
     const htmlImage = new Image()

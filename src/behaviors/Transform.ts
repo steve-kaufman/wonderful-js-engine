@@ -1,4 +1,4 @@
-import { Behavior, Vector, Box } from '../game'
+import { Behavior, Vector, Box } from '..'
 
 export enum Corner {
   TOP_LEFT,
@@ -46,7 +46,8 @@ export class Transform extends Behavior {
     const [leftOf1, topOf1, rightOf1, bottomOf1] = box1
     const [leftOf2, topOf2, rightOf2, bottomOf2] = box2
 
-    let verticalAlign: boolean, horizontalAlign: boolean
+    let verticalAlign = false
+    let horizontalAlign = false
 
     if (rightOf1 > leftOf2 && leftOf1 < rightOf2) {
       horizontalAlign = true

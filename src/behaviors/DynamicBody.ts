@@ -1,4 +1,4 @@
-import { Behavior, Collision, CollisionSide } from '../game'
+import { Behavior, Collision, CollisionSide } from '..'
 
 export class DynamicBody extends Behavior {
   constructor() {
@@ -6,7 +6,7 @@ export class DynamicBody extends Behavior {
   }
 
   onCollisionEnter(collision: Collision) {
-    if (!collision.gameObject.boxCollider.isSolid) return
+    if (!collision.gameObject.boxCollider!.isSolid) return
     console.log('handling collision')
     const { side, gameObject } = collision
     const { transform } = this.parent

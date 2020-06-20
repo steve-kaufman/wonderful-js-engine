@@ -1,5 +1,4 @@
-import { Behavior } from '../game/Behavior'
-import { Canvas } from '../game/Canvas'
+import { Canvas, Behavior } from '..'
 
 export class BoxOutline extends Behavior {
   constructor() {
