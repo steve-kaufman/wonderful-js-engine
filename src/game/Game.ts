@@ -9,6 +9,8 @@ export class Game {
   // This value controls whether the game is updating/rendering
   private isRunning: boolean
 
+  private lastTime: number
+
   // Ticks per second for update loop
   public updateRate: number
 
@@ -23,21 +25,20 @@ export class Game {
 
   // Update loop (fixed time)
   private update() {
-    if (!this.isRunning) return
+    const currentTime = Date.now()
+    const dt = (currentTime - this.lastTime) / 100
 
     this.gameObjects.forEach(gameObject => {
-      gameObject.update()
+      gameObject.update(dt)
     })
 
     this.input.clear()
 
-    setTimeout(this.update.bind(this), 1000 / this.updateRate)
+    this.lastTime = currentTime
   }
 
   // Render loop (flux time)
   private render() {
-    if (!this.isRunning) return
-
     this.canvas.ctx.clearRect(
       0,
       0,
@@ -48,8 +49,15 @@ export class Game {
     this.gameObjects.forEach(gameObject => {
       gameObject.render(this.canvas)
     })
+  }
 
-    requestAnimationFrame(this.render.bind(this))
+  private loop() {
+    if (!this.isRunning) return
+
+    this.update()
+    this.render()
+
+    requestAnimationFrame(this.loop.bind(this))
   }
 
   // Starts update and render loops
@@ -57,8 +65,7 @@ export class Game {
     if (this.isRunning) return
 
     this.isRunning = true
-    this.update()
-    this.render()
+    this.loop()
   }
   // Stops update and render loops
   stop() {

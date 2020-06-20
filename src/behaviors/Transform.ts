@@ -1,4 +1,11 @@
-import { Behavior, Vector } from '../game'
+import { Behavior, Vector, Box } from '../game'
+
+export enum Corner {
+  TOP_LEFT,
+  TOP_RIGHT,
+  BOTTOM_RIGHT,
+  BOTTOM_LEFT
+}
 
 export class Transform extends Behavior {
   constructor(
@@ -14,33 +21,30 @@ export class Transform extends Behavior {
     return [this.x, this.y, this.width, this.height]
   }
 
-  getCorners(): [Vector, Vector, Vector, Vector] {
+  getSides(): Box {
     const [x, y, w, h] = this.get()
+    const left = x
+    const top = y
+    const right = x + w
+    const bottom = y + h
 
-    const topLeft = new Vector(x, y)
-    const topRight = new Vector(x + w, y)
-    const bottomLeft = new Vector(x, y + h)
-    const bottomRight = new Vector(x + w, y + h)
-
-    return [topLeft, topRight, bottomLeft, bottomRight]
+    return [left, top, right, bottom]
   }
 
-  static DetectCollision(
-    transform1: Transform,
-    transform2: Transform
-  ): boolean {
-    const [x1, y1, w1, h1] = transform1.get()
-    const [x2, y2, w2, h2] = transform2.get()
+  getCorners(): [Vector, Vector, Vector, Vector] {
+    const [left, top, right, bottom] = this.getSides()
 
-    const leftOf1 = x1
-    const topOf1 = y1
-    const rightOf1 = x1 + w1
-    const bottomOf1 = y1 + h1
+    const topLeft = new Vector(left, top)
+    const topRight = new Vector(right, top)
+    const bottomRight = new Vector(right, bottom)
+    const bottomLeft = new Vector(left, bottom)
 
-    const leftOf2 = x2
-    const topOf2 = y2
-    const rightOf2 = x2 + w2
-    const bottomOf2 = y2 + h2
+    return [topLeft, topRight, bottomRight, bottomLeft]
+  }
+
+  static DetectCollision(box1: Box, box2: Box): boolean {
+    const [leftOf1, topOf1, rightOf1, bottomOf1] = box1
+    const [leftOf2, topOf2, rightOf2, bottomOf2] = box2
 
     let verticalAlign: boolean, horizontalAlign: boolean
 

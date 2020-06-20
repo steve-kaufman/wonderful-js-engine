@@ -1,10 +1,6 @@
 import { v4 as uuidv4 } from 'uuid'
-import { Behavior } from './Behavior'
-import { Canvas } from './Canvas'
-import { Transform } from '../behaviors/Transform'
-import { BoxOutline } from '../behaviors/BoxOutline'
-import Game from './Game'
-import { Collision } from './Collision'
+import { Behavior, Canvas, Collision, Game } from '.'
+import { BoxCollider, BoxOutline, Transform } from '../behaviors'
 
 export class GameObject {
   // UUID
@@ -21,7 +17,9 @@ export class GameObject {
   private postUpdaters: Map<string, Behavior> = new Map()
   private renderers: Map<string, Behavior> = new Map()
   // Callbacks for collision event
+  private collisionEnterHandlers: Map<string, Behavior> = new Map()
   private collisionHandlers: Map<string, Behavior> = new Map()
+  private collisionExitHandlers: Map<string, Behavior> = new Map()
 
   // Member behaviors
   public transform: Transform
@@ -31,19 +29,18 @@ export class GameObject {
   constructor(name?: string) {
     this.id = name || uuidv4()
     this.transform = this.addBehavior(new Transform())
-    this.boxOutline = this.addBehavior(new BoxOutline())
   }
 
   // Update loop (fixed time)
-  update() {
+  update(dt: number) {
     this.preUpdaters.forEach(behavior => {
-      behavior.preUpdate()
+      behavior.preUpdate(dt)
     })
     this.updaters.forEach(behavior => {
-      behavior.update()
+      behavior.update(dt)
     })
     this.postUpdaters.forEach(behavior => {
-      behavior.postUpdate()
+      behavior.postUpdate(dt)
     })
   }
 
@@ -54,9 +51,19 @@ export class GameObject {
     })
   }
 
+  onCollisionEnter(collision: Collision) {
+    this.collisionEnterHandlers.forEach(behavior => {
+      behavior.onCollisionEnter(collision)
+    })
+  }
   onCollision(collision: Collision) {
     this.collisionHandlers.forEach(behavior => {
       behavior.onCollision(collision)
+    })
+  }
+  onCollisionExit(collision: Collision) {
+    this.collisionExitHandlers.forEach(behavior => {
+      behavior.onCollisionExit(collision)
     })
   }
 
@@ -73,8 +80,15 @@ export class GameObject {
     if (behavior.render) {
       this.renderers.set(behavior.id, behavior)
     }
+
     if (behavior.onCollision) {
       this.collisionHandlers.set(behavior.id, behavior)
+    }
+    if (behavior.onCollisionEnter) {
+      this.collisionEnterHandlers.set(behavior.id, behavior)
+    }
+    if (behavior.onCollisionExit) {
+      this.collisionExitHandlers.set(behavior.id, behavior)
     }
 
     this.behaviors.set(behavior.id, behavior)
@@ -86,6 +100,10 @@ export class GameObject {
     }
 
     return behavior as T
+  }
+
+  getBehavior(behaviorId: string): Behavior {
+    return this.behaviors.get(behaviorId)
   }
 
   deleteBehavior(behavior: Behavior) {

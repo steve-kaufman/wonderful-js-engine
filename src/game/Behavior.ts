@@ -13,15 +13,17 @@ export abstract class Behavior {
     this.id = name || uuidv4()
   }
 
-  preUpdate?(): void
-  update?(): void
-  postUpdate?(): void
+  preUpdate?(dt: number): void
+  update?(dt: number): void
+  postUpdate?(dt: number): void
 
   render?(canvas: Canvas): void
 
   onAdd?(): void
 
+  onCollisionEnter?(collision: Collision): void
   onCollision?(collision: Collision): void
+  onCollisionExit?(collision: Collision): void
 
   delete() {
     if (!this.parent) return

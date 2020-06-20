@@ -1,22 +1,20 @@
-import { GameObject } from '../game/GameObject'
-import { Behavior } from '../game/Behavior'
-import { Sprite } from '../behaviors/Sprite'
-import { BoxCollider } from '../behaviors/BoxCollider'
-import { Collision } from '../game/Collision'
+import { Behavior, Collision, GameObject } from '../game'
+import { BoxCollider, DynamicBody, BoxOutline } from '../behaviors'
+import { ObjectBehavior } from './Object'
 
 const player = new GameObject('player')
 
 player.transform.x = 100
 
 class Move extends Behavior {
-  private speed = 3
+  private speed = 8
   private gravity = 1.5
 
   constructor() {
     super('playerMove')
   }
 
-  update() {
+  update(dt: number) {
     const { game, transform } = this.parent
     const { input } = game
 
@@ -35,6 +33,9 @@ class Move extends Behavior {
       velocity.y += this.speed
     }
 
+    velocity.x *= dt
+    velocity.y *= dt
+
     transform.x += velocity.x
     transform.y += velocity.y
 
@@ -43,13 +44,23 @@ class Move extends Behavior {
     }
   }
 
-  onCollision(collision: Collision) {
-    console.log(collision.side)
+  onCollisionEnter(collision: Collision) {
+    if (collision.gameObject.id !== 'object') return
+
+    const objectBehavior = collision.gameObject.getBehavior(
+      'objectBehavior'
+    ) as ObjectBehavior
+
+    objectBehavior.relocate()
   }
 }
 
 player.addBehavior(new Move())
 player.addBehavior(new BoxCollider())
+player.addBehavior(new DynamicBody())
+player.addBehavior(new BoxOutline())
 // player.addBehavior(new Sprite('/assets/sprites/bird.png'))
+
+console.log(player)
 
 export default player

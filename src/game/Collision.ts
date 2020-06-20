@@ -4,7 +4,8 @@ export enum CollisionSide {
   LEFT,
   TOP,
   RIGHT,
-  BOTTOM
+  BOTTOM,
+  NONE
 }
 
 export interface Collision {

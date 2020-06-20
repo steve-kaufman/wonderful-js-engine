@@ -27,6 +27,7 @@ export class Input {
 
   private handleKeyDown(e: KeyboardEvent) {
     const { keyCode } = e
+    if (this.keysDown.get(keyCode)) return
     this.keysJustPressed.set(keyCode, true)
     this.keysDown.set(keyCode, true)
   }
