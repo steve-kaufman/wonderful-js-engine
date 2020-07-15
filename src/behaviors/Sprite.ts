@@ -23,12 +23,8 @@ export class Sprite extends Behavior {
   }
 
   render(canvas: Canvas) {
-    const { transform } = this.parent
-    canvas.ctx.drawImage(
-      this.image,
-      Math.floor(transform.x),
-      Math.floor(transform.y)
-    )
+    const { box } = this.parent
+    canvas.ctx.drawImage(this.image, Math.floor(box.x), Math.floor(box.y))
   }
 
   onAdd() {

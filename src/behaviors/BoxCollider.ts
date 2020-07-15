@@ -1,82 +1,105 @@
-import { Behavior, CollisionSide, GameObject, Vector } from '..'
-import { Corner, Transform } from '.'
+import { Behavior, GameObject, Vector, Side, Corner, Box } from '..'
+import { Collision, GameObjectWithBoxCollider } from '../game/Collision'
+import { Direction } from '../game/Vector'
 
 export class BoxCollider extends Behavior {
+  private collisions: Map<string, Collision> = new Map()
+
   private lastPos: Vector = new Vector()
 
-  private collisions: Map<string, GameObject> = new Map()
+  private velocity: Vector = new Vector(0, 0)
 
-  readonly isSolid: boolean
+  private trajectory?: number
 
-  constructor(options = { solid: true }) {
+  private leadingCorner?: Vector
+
+  constructor(readonly isSolid: boolean) {
     super('boxCollider')
-    this.isSolid = options.solid
   }
 
-  // Override
   preUpdate() {
-    this.lastPos.x = this.parent.transform.x
-    this.lastPos.y = this.parent.transform.y
-
-    this.collisions.forEach(gameObject => {
-      if (
-        !Transform.DetectCollision(
-          this.parent.transform.getSides(),
-          gameObject.transform.getSides()
-        )
-      ) {
-        this.removeCollision(gameObject.id)
-      }
-    })
+    this.lastPos.x = this.parent.box.x
+    this.lastPos.y = this.parent.box.y
   }
 
-  // Override
-  postUpdate() {
-    const { game } = this.parent
-    game.getGameObjects().forEach((gameObject: GameObject) => {
-      if (gameObject === this.parent) return
+  private setVelocity() {
+    this.velocity = new Vector(
+      this.parent.box.x - this.lastPos.x,
+      this.parent.box.y - this.lastPos.y
+    )
+  }
 
-      if (gameObject.boxCollider === undefined) return
+  private setTrajectory() {
+    this.trajectory = this.velocity.y / this.velocity.x
+  }
 
-      const isColliding = Transform.DetectCollision(
-        this.parent.transform.getSides(),
-        gameObject.transform.getSides()
+  private setLeadingCorner() {
+    const direction = this.velocity.toDirection()
+    const corners = this.parent.box.getCorners()
+
+    if (direction == Direction.UP_LEFT) {
+      this.leadingCorner = corners.topLeft
+    }
+    if (direction == Direction.UP_RIGHT) {
+      this.leadingCorner = corners.topRight
+    }
+    if (direction == Direction.DOWN_RIGHT) {
+      this.leadingCorner = corners.bottomRight
+    }
+    if (direction == Direction.DOWN_LEFT) {
+      this.leadingCorner = corners.bottomLeft
+    }
+
+    this.leadingCorner = undefined
+  }
+
+  private updateCollisions() {
+    this.collisions.forEach(collision => {
+      collision.update()
+    }, this)
+  }
+
+  addCollision(gameObject: GameObject) {
+    if (gameObject == this.parent) return
+
+    this.collisions.set(
+      gameObject.id,
+      new Collision(
+        this.parent as GameObjectWithBoxCollider,
+        gameObject as GameObjectWithBoxCollider
       )
-
-      if (!isColliding) {
-        const wasColliding = this.collisions.delete(gameObject.id)
-
-        if (wasColliding) {
-          this.parent.onCollisionExit({
-            side: null,
-            gameObject
-          })
-        }
-
-        return
-      }
-
-      let side: CollisionSide
-
-      if (!this.isCollidingWith(gameObject.id)) {
-        side = this.getCollisionSide(
-          gameObject as GameObject & { boxCollider: BoxCollider }
-        )
-        this.parent.onCollisionEnter({ side, gameObject })
-        this.collisions.set(gameObject.id, gameObject)
-      }
-
-      this.parent.onCollision({ side: null, gameObject })
-    })
+    )
   }
 
-  // Override
+  deleteCollision(gameObject: GameObject) {
+    this.collisions.delete(gameObject.id)
+  }
+
+  private addNewCollisions() {
+    const { game, box } = this.parent
+
+    game.getGameObjects().forEach(gameObject => {
+      if (box.isCollidingWith(gameObject.box)) {
+        this.addCollision(gameObject)
+      }
+    }, this)
+  }
+
+  postUpdate() {
+    const { game, box } = this.parent
+    this.setVelocity()
+    this.setTrajectory()
+    this.setLeadingCorner()
+    this.addNewCollisions()
+    this.updateCollisions()
+  }
+
   onAdd() {
     this.parent.boxCollider = this
   }
 
   getLastPos(): Vector {
-    return { ...this.lastPos }
+    return new Vector(this.lastPos.x, this.lastPos.y)
   }
 
   isCollidingWith(gameObjectId: string): boolean {
@@ -87,83 +110,19 @@ export class BoxCollider extends Behavior {
     this.collisions.delete(gameObjectId)
   }
 
-  private getCollisionSide(
-    other: GameObject & { boxCollider: BoxCollider }
-  ): CollisionSide {
-    // Get velocity of parent GameObject
-    const parentVelocity = new Vector(
-      this.parent.transform.x - this.lastPos.x,
-      this.parent.transform.y - this.lastPos.y
-    )
-    // Get velocity of other GameObject
-    const otherVelocity = new Vector(
-      other.transform.x - other.boxCollider.getLastPos().x,
-      other.transform.y - other.boxCollider.getLastPos().y
-    )
-
-    // Subtract other velocity from parent velocity
-    const netVelocity = new Vector(
-      parentVelocity.x - otherVelocity.x,
-      parentVelocity.y - otherVelocity.y
-    )
-
-    // If only moving in one direction, corners don't matter
-    if (netVelocity.x === 0) {
-      if (netVelocity.y < 0) {
-        return CollisionSide.TOP
-      } else if (netVelocity.y > 0) {
-        return CollisionSide.BOTTOM
-      }
-      return CollisionSide.NONE
-    } else if (netVelocity.y === 0) {
-      if (netVelocity.x < 0) {
-        return CollisionSide.LEFT
-      } else if (netVelocity.x > 0) {
-        return CollisionSide.RIGHT
-      }
-      return CollisionSide.NONE
-    }
-
-    // Find 'leading corners' of collision
-    const corners = this.parent.transform.getCorners()
-    const cornerIndex = this.getLeadingCorner(corners, netVelocity)
-    const parentCorner = corners[cornerIndex]
-    const otherCorner = other.transform.getCorners()[(cornerIndex + 2) % 4]
-
-    const trajectory =
-      (netVelocity.y / netVelocity.x) * (otherCorner.x - parentCorner.x) +
-      parentCorner.y
-
-    if (trajectory > otherCorner.y) {
-      if (cornerIndex === Corner.TOP_LEFT || cornerIndex === Corner.TOP_RIGHT) {
-        return CollisionSide.TOP
-      }
-      if (cornerIndex === Corner.BOTTOM_LEFT) return CollisionSide.LEFT
-      return CollisionSide.RIGHT
-    }
-    if (
-      cornerIndex === Corner.BOTTOM_LEFT ||
-      cornerIndex === Corner.BOTTOM_RIGHT
-    ) {
-      return CollisionSide.BOTTOM
-    }
-    if (cornerIndex === Corner.TOP_LEFT) return CollisionSide.LEFT
-    return CollisionSide.RIGHT
+  getVelocity(): Vector {
+    return new Vector(this.velocity.x, this.velocity.y)
   }
 
-  private getLeadingCorner(
-    corners: [Vector, Vector, Vector, Vector],
-    velocity: Vector
-  ): Corner {
-    if (velocity.y < 0) {
-      if (velocity.x < 0) {
-        return Corner.TOP_LEFT
-      }
-      return Corner.TOP_RIGHT
+  getTrajectory(): number | undefined {
+    return this.trajectory
+  }
+
+  getLeadingCorner(): Vector | undefined {
+    if (!this.leadingCorner) {
+      return undefined
     }
-    if (velocity.x < 0) {
-      return Corner.BOTTOM_LEFT
-    }
-    return Corner.BOTTOM_RIGHT
+
+    return new Vector(this.leadingCorner.x, this.leadingCorner.y)
   }
 }

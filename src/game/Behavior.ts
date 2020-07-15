@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { GameObject } from './GameObject'
 import { Canvas } from './Canvas'
 import { Collision } from './Collision'
+import { Side } from '..'
 
 export abstract class Behavior {
   protected parent!: GameObject
@@ -13,17 +14,17 @@ export abstract class Behavior {
     this.id = name || uuidv4()
   }
 
-  preUpdate?(dt: number): void
-  update?(dt: number): void
-  postUpdate?(dt: number): void
+  preUpdate(dt: number) {}
+  update(dt: number) {}
+  postUpdate(dt: number) {}
 
-  render?(canvas: Canvas): void
+  render(canvas: Canvas) {}
 
-  onAdd?(): void
+  onAdd() {}
 
-  onCollisionEnter?(collision: Collision): void
-  onCollision?(collision: Collision): void
-  onCollisionExit?(collision: Collision): void
+  onCollisionEnter(other: GameObject, side: Side) {}
+  onCollision(other: GameObject) {}
+  onCollisionExit(other: GameObject) {}
 
   delete() {
     if (!this.parent) return

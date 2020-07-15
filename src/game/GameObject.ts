@@ -1,149 +1,85 @@
 import { v4 as uuidv4 } from 'uuid'
-import { Behavior, Canvas, Collision, Game } from '..'
-import { BoxCollider, BoxOutline, Transform } from '../behaviors'
+import { Behavior, Canvas, Collision, Game, Side, Box } from '..'
+import { BoxOutline, BoxCollider } from '../behaviors'
+
+/**
+ * The GameObject class acts as a parent class for a variety of Behaviors.
+ * Some Behaviors are built in to the engine, such as Box, BoxCollider,
+ * etc.
+ * Some are user-defined, e.x. a behavior called Move resposible for moving the
+ * player.
+ */
 
 export class GameObject {
-  // UUID
   readonly id: string
 
-  // Game
   public game!: Game
 
-  // Map of behaviors
   private behaviors: Map<string, Behavior> = new Map()
-  // Callbacks for update and render loops
-  private preUpdaters: Map<string, Behavior & { preUpdate(): void }> = new Map()
-  private updaters: Map<string, Behavior & { update(): void }> = new Map()
-  private postUpdaters: Map<
-    string,
-    Behavior & { postUpdate(): void }
-  > = new Map()
-  private renderers: Map<string, Behavior & { render(): void }> = new Map()
-  // Callbacks for collision event
-  private collisionEnterHandlers: Map<
-    string,
-    Behavior & { onCollisionEnter(collision: Collision): void }
-  > = new Map()
-  private collisionHandlers: Map<
-    string,
-    Behavior & { onCollision(collision: Collision): void }
-  > = new Map()
-  private collisionExitHandlers: Map<
-    string,
-    Behavior & { onCollisionExit(collision: Collision): void }
-  > = new Map()
 
-  private onAdders: Map<string, Behavior & { onAdd(): void }> = new Map()
+  public box: Box
 
-  // Member behaviors
-  public transform: Transform
+  // Behaviors with reserved names
   public boxOutline?: BoxOutline
   public boxCollider?: BoxCollider
 
   constructor(name?: string) {
     this.id = name || uuidv4()
-    this.transform = this.addBehavior(new Transform())
+    this.box = new Box()
   }
 
-  // Update loop (fixed time)
-  update(dt: number) {
-    this.preUpdaters.forEach(behavior => {
+  private preUpdateBehaviors(dt: number) {
+    this.behaviors.forEach(behavior => {
       behavior.preUpdate(dt)
     })
-    this.updaters.forEach(behavior => {
+  }
+  private updateBehaviors(dt: number) {
+    this.behaviors.forEach(behavior => {
       behavior.update(dt)
     })
-    this.postUpdaters.forEach(behavior => {
+  }
+  private postUpdateBehaviors(dt: number) {
+    this.behaviors.forEach(behavior => {
       behavior.postUpdate(dt)
     })
   }
 
-  // Render loop (flux time)
+  update(dt: number) {
+    this.preUpdateBehaviors(dt)
+    this.updateBehaviors(dt)
+    this.postUpdateBehaviors(dt)
+  }
+
   render(canvas: Canvas) {
-    this.renderers.forEach(behavior => {
+    this.behaviors.forEach(behavior => {
       behavior.render(canvas)
     })
   }
 
-  onCollisionEnter(collision: Collision) {
-    this.collisionEnterHandlers.forEach(behavior => {
-      behavior.onCollisionEnter(collision)
+  onCollisionEnter(other: GameObject, side: Side) {
+    this.behaviors.forEach(behavior => {
+      behavior.onCollisionEnter(other, side)
     })
   }
-  onCollision(collision: Collision) {
-    this.collisionHandlers.forEach(behavior => {
-      behavior.onCollision(collision)
+  onCollision(other: GameObject) {
+    this.behaviors.forEach(behavior => {
+      behavior.onCollision(other)
     })
   }
-  onCollisionExit(collision: Collision) {
-    this.collisionExitHandlers.forEach(behavior => {
-      behavior.onCollisionExit(collision)
+  onCollisionExit(other: GameObject) {
+    this.behaviors.forEach(behavior => {
+      behavior.onCollisionExit(other)
     })
   }
 
   onAdd() {
-    this.onAdders.forEach(behavior => {
+    this.behaviors.forEach(behavior => {
       behavior.onAdd()
     })
   }
 
   addBehavior<T>(behavior: Behavior & T): T {
-    if (behavior.preUpdate) {
-      this.preUpdaters.set(
-        behavior.id,
-        behavior as Behavior & { preUpdate(): void } & T
-      )
-    }
-    if (behavior.update) {
-      this.updaters.set(
-        behavior.id,
-        behavior as Behavior & { update(): void } & T
-      )
-    }
-    if (behavior.postUpdate) {
-      this.postUpdaters.set(
-        behavior.id,
-        behavior as Behavior & { postUpdate(): void } & T
-      )
-    }
-    if (behavior.render) {
-      this.renderers.set(
-        behavior.id,
-        behavior as Behavior & { render(): void } & T
-      )
-    }
-
-    if (behavior.onCollision) {
-      this.collisionHandlers.set(
-        behavior.id,
-        behavior as Behavior & { onCollision(): void } & T
-      )
-    }
-    if (behavior.onCollisionEnter) {
-      this.collisionEnterHandlers.set(
-        behavior.id,
-        behavior as Behavior & {
-          onCollisionEnter(collision: Collision): void
-        } & T
-      )
-    }
-    if (behavior.onCollisionExit) {
-      this.collisionExitHandlers.set(
-        behavior.id,
-        behavior as Behavior & {
-          onCollisionExit(collision: Collision): void
-        } & T
-      )
-    }
-    if (behavior.onAdd) {
-      this.onAdders.set(
-        behavior.id,
-        behavior as Behavior & {
-          onAdd(collision: Collision): void
-        } & T
-      )
-    }
-
+    // this.registerBehavior(behavior)
     this.behaviors.set(behavior.id, behavior)
 
     behavior.setParent(this)
@@ -156,9 +92,6 @@ export class GameObject {
   }
 
   deleteBehavior(behavior: Behavior) {
-    this.preUpdaters.delete(behavior.id)
-    this.updaters.delete(behavior.id)
-    this.postUpdaters.delete(behavior.id)
-    this.renderers.delete(behavior.id)
+    this.behaviors.delete(behavior.id)
   }
 }

@@ -3,53 +3,52 @@ import { Canvas } from './Canvas'
 import { Input } from './Input'
 
 export class Game {
-  // Callbacks for update and render loops
-  private gameObjects: Map<string, GameObject>
+  private gameObjects: Map<string, GameObject> = new Map()
 
-  // This value controls whether the game is updating/rendering
   private isRunning: boolean = false
 
   private lastTime: number
 
-  // Ticks per second for update loop
-  public updateRate: number
-
-  readonly input: Input
+  readonly input: Input = new Input()
 
   constructor(readonly canvas: Canvas) {
-    this.updateRate = 30
-    this.gameObjects = new Map()
-    this.input = new Input()
     this.lastTime = Date.now()
     this.start()
   }
 
-  // Update loop (fixed time)
-  private update() {
+  private getDeltaTime(): number {
     const currentTime = Date.now()
     const dt = (currentTime - this.lastTime) / 100
+    return dt
+  }
 
+  private updateGameObjects(dt: number) {
     this.gameObjects.forEach(gameObject => {
       gameObject.update(dt)
     })
+  }
+
+  private update() {
+    const dt = this.getDeltaTime()
+
+    this.updateGameObjects(dt)
 
     this.input.clear()
 
-    this.lastTime = currentTime
+    this.lastTime = Date.now()
+  }
+
+  private renderGameObjects() {
+    this.gameObjects.forEach(gameObject => {
+      gameObject.render(this.canvas)
+    })
   }
 
   // Render loop (flux time)
   private render() {
-    this.canvas.ctx.clearRect(
-      0,
-      0,
-      this.canvas.canvas.width,
-      this.canvas.canvas.height
-    )
+    this.canvas.clear()
 
-    this.gameObjects.forEach(gameObject => {
-      gameObject.render(this.canvas)
-    })
+    this.renderGameObjects()
   }
 
   private loop() {
@@ -68,6 +67,7 @@ export class Game {
     this.isRunning = true
     this.loop()
   }
+
   // Stops update and render loops
   stop() {
     this.isRunning = false
@@ -79,6 +79,7 @@ export class Game {
     gameObject.game = this
     gameObject.onAdd()
   }
+
   // Unsubscribes a GameObject to the update and render loops
   removeGameObject(gameObject: GameObject) {
     this.gameObjects.delete(gameObject.id)
@@ -93,6 +94,7 @@ export class Game {
     return this.gameObjects.get(id) as GameObject
   }
 
+  // Retrieves all GameObjects
   getGameObjects(): Map<string, GameObject> {
     return this.gameObjects
   }

@@ -5,7 +5,6 @@ export class BoxOutline extends Behavior {
     super('boxOutline')
   }
   render(canvas: Canvas) {
-    const { transform } = this.parent
-    canvas.rect(transform.x, transform.y, transform.width, transform.height)
+    canvas.rect(this.parent.box)
   }
 }
