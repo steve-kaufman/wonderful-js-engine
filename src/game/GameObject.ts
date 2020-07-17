@@ -1,97 +1,33 @@
-import { v4 as uuidv4 } from 'uuid'
-import { Behavior, Canvas, Collision, Game, Side, Box } from '..'
-import { BoxOutline, BoxCollider } from '../behaviors'
-
-/**
- * The GameObject class acts as a parent class for a variety of Behaviors.
- * Some Behaviors are built in to the engine, such as Box, BoxCollider,
- * etc.
- * Some are user-defined, e.x. a behavior called Move resposible for moving the
- * player.
- */
+import { Behavior } from '..'
 
 export class GameObject {
-  readonly id: string
+  private static count = 1
 
-  public game!: Game
+  readonly id: number
 
   private behaviors: Map<string, Behavior> = new Map()
 
-  public box: Box
-
-  // Behaviors with reserved names
-  public boxOutline?: BoxOutline
-  public boxCollider?: BoxCollider
-
-  constructor(name?: string) {
-    this.id = name || uuidv4()
-    this.box = new Box()
+  constructor() {
+    this.id = GameObject.count++
   }
 
-  private preUpdateBehaviors(dt: number) {
+  update() {
     this.behaviors.forEach(behavior => {
-      behavior.preUpdate(dt)
-    })
-  }
-  private updateBehaviors(dt: number) {
-    this.behaviors.forEach(behavior => {
-      behavior.update(dt)
-    })
-  }
-  private postUpdateBehaviors(dt: number) {
-    this.behaviors.forEach(behavior => {
-      behavior.postUpdate(dt)
+      behavior.update()
     })
   }
 
-  update(dt: number) {
-    this.preUpdateBehaviors(dt)
-    this.updateBehaviors(dt)
-    this.postUpdateBehaviors(dt)
-  }
-
-  render(canvas: Canvas) {
+  render() {
     this.behaviors.forEach(behavior => {
-      behavior.render(canvas)
+      behavior.render()
     })
   }
 
-  onCollisionEnter(other: GameObject, side: Side) {
-    this.behaviors.forEach(behavior => {
-      behavior.onCollisionEnter(other, side)
-    })
-  }
-  onCollision(other: GameObject) {
-    this.behaviors.forEach(behavior => {
-      behavior.onCollision(other)
-    })
-  }
-  onCollisionExit(other: GameObject) {
-    this.behaviors.forEach(behavior => {
-      behavior.onCollisionExit(other)
-    })
-  }
-
-  onAdd() {
-    this.behaviors.forEach(behavior => {
-      behavior.onAdd()
-    })
-  }
-
-  addBehavior<T>(behavior: Behavior & T): T {
-    // this.registerBehavior(behavior)
+  addBehavior(behavior: Behavior) {
     this.behaviors.set(behavior.id, behavior)
-
-    behavior.setParent(this)
-
-    return behavior as T
   }
 
-  getBehavior(behaviorId: string): Behavior {
-    return this.behaviors.get(behaviorId) as Behavior
-  }
-
-  deleteBehavior(behavior: Behavior) {
-    this.behaviors.delete(behavior.id)
+  getBehavior(behaviorId: string): Behavior | undefined {
+    return this.behaviors.get(behaviorId)
   }
 }

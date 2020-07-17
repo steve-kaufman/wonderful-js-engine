@@ -6,6 +6,7 @@
   "types": "lib/index.d.ts",
   "scripts": {
     "test": "jest",
+    "test:dev": "jest --watch",
     "build": "tsc",
     "prepare": "npm run build"
   },
@@ -14,9 +15,13 @@
     "uuid": "8.1.0"
   },
   "devDependencies": {
-    "@babel/core": "7.2.0",
+    "@babel/core": "^7.10.5",
+    "@babel/preset-env": "^7.10.4",
+    "@babel/preset-typescript": "^7.10.4",
     "@types/jest": "^26.0.4",
+    "babel-jest": "^26.1.0",
     "jest": "^26.1.0",
+    "ts-jest": "^26.1.2",
     "typescript": "3.9.5"
   },
   "keywords": [
